@@ -1,89 +1,20 @@
 {
-  "title": "Academic Research MCP Input",
-  "description": "Input schema for Academic Research MCP Server",
+  "title": "Academic Research MCP",
   "type": "object",
+  "schemaVersion": 1,
   "properties": {
     "tool": {
       "title": "Tool Name",
       "type": "string",
-      "description": "Name of the MCP tool to call",
-      "enum": [
-        "search_papers",
-        "get_paper_details",
-        "find_citations",
-        "find_grants",
-        "institution_research_profile",
-        "author_research_profile",
-        "research_trends",
-        "systematic_review"
-      ]
+      "description": "MCP tool to call",
+      "enum": ["search_papers", "get_paper_details", "find_citations", "find_grants", "institution_research_profile", "author_research_profile", "research_trends", "systematic_review"],
+      "editor": "select"
     },
     "params": {
-      "title": "Tool Parameters",
+      "title": "Parameters (JSON)",
       "type": "object",
-      "description": "Parameters for the selected tool",
-      "properties": {
-        "query": {
-          "type": "string",
-          "description": "Search query (for search_papers, find_grants, systematic_review)"
-        },
-        "doi": {
-          "type": "string",
-          "description": "Paper DOI (for get_paper_details, find_citations)"
-        },
-        "max_results": {
-          "type": "integer",
-          "description": "Maximum number of results (default: 10)",
-          "default": 10,
-          "minimum": 1,
-          "maximum": 100
-        },
-        "funder_type": {
-          "type": "string",
-          "enum": ["nih", "nsf", "foundation", "all"],
-          "default": "all",
-          "description": "Type of grant funder"
-        },
-        "institution_name": {
-          "type": "string",
-          "description": "Name of institution (for institution_research_profile)"
-        },
-        "author_name": {
-          "type": "string",
-          "description": "Name of author (for author_research_profile)"
-        },
-        "institution": {
-          "type": "string",
-          "description": "Institution filter for author search (optional)"
-        },
-        "topic": {
-          "type": "string",
-          "description": "Research topic (for research_trends)"
-        },
-        "year_from": {
-          "type": "integer",
-          "description": "Start year for trend analysis",
-          "minimum": 1900,
-          "maximum": 2030
-        },
-        "year_to": {
-          "type": "integer",
-          "description": "End year for trend analysis",
-          "minimum": 1900,
-          "maximum": 2030
-        },
-        "min_year": {
-          "type": "integer",
-          "description": "Minimum publication year (for systematic_review)",
-          "minimum": 1900,
-          "maximum": 2030
-        },
-        "domains": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Filter by academic domains (optional)"
-        }
-      }
+      "description": "Tool parameters as JSON object",
+      "editor": "json"
     }
   }
 }
