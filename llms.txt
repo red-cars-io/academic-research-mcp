@@ -107,3 +107,22 @@ curl -X POST "https://academic-research-mcp.apify.actor/mcp" \
 | systematic_review | $100.00 |
 
 No subscription required. Pay per use via Apify PPE.
+
+## Apify Free Account Usage
+
+Apify provides free usage credits on all accounts:
+- **Free tier:** Includes credits for testing and small-scale usage
+- **PPE (Pay-Per-Event):** Only charged when tools are actually called
+- **No monthly minimums:** Pay only for what you use
+
+To get started:
+1. Create free Apify account at https://apify.com
+2. Get your API token from https://console.apify.com/account
+3. Pass token as query param: `?token=YOUR_APIFY_TOKEN` or `Authorization: Bearer` header
+
+Example with token:
+```bash
+curl -X POST "https://academic-research-mcp.apify.actor/mcp?token=YOUR_APIFY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"tool": "search_papers", "params": {"query": "machine learning"}}'
+```
