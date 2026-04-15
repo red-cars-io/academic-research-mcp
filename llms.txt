@@ -1,0 +1,109 @@
+# Academic Research MCP — AI Agent Research Librarian
+
+Search 600M+ academic papers, grants, and citations for AI agents.
+
+**MCP Endpoint:** https://academic-research-mcp.apify.actor/mcp
+**Apify Store:** https://apify.com/xJbDa0jVpat4rNTan
+
+---
+
+## Tools
+
+### search_papers
+Search academic papers across CrossRef and OpenAlex databases.
+- **Price:** $0.02
+- **Input:** `{"query": "string", "max_results": integer}`
+- **Output:** `[{"title": string, "authors": string, "year": integer, "doi": string, "journal": string, "citations": integer, "url": string, "source": string}]`
+
+### get_paper_details
+Get detailed metadata for a paper by DOI.
+- **Price:** $0.01
+- **Input:** `{"doi": "string"}`
+- **Output:** `{"title": string, "authors": string, "year": integer, "doi": string, "abstract": string, "journal": string, "citations": integer, "funders": string[], "topics": string[], "source": string}`
+
+### find_citations
+Find papers that cite a specific paper.
+- **Price:** $0.02
+- **Input:** `{"doi": "string", "max_results": integer}`
+- **Output:** `[{"title": string, "authors": string, "year": integer, "doi": string, "journal": string, "citations": integer, "source": string}]`
+
+### find_grants
+Search funding opportunities from NIH and NSF.
+- **Price:** $0.03
+- **Input:** `{"query": "string", "funder_type": "nih" | "nsf" | "foundation" | "all"}`
+- **Output:** `[{"title": string, "agency": string, "award_id": string, "amount": integer, "pi": string, "institution": string, "start_year": string, "deadline": string, "url": string}]`
+
+### institution_research_profile
+Get research profile for an institution (h-index, paper counts, topics).
+- **Price:** $0.05
+- **Input:** `{"institution_name": "string"}`
+- **Output:** `{"name": string, "country": string, "paper_count": integer, "citation_count": integer, "h_index": integer, "topics": string[], "source": string}`
+
+### author_research_profile
+Get research profile for an author (h-index, top papers, affiliations).
+- **Price:** $0.03
+- **Input:** `{"author_name": "string", "institution": "string?"}`
+- **Output:** `{"name": string, "orcid": string, "paper_count": integer, "citation_count": integer, "h_index": integer, "institutions": string[], "top_papers": string[], "source": string}`
+
+### research_trends
+Analyze research trends for a topic over time.
+- **Price:** $0.05
+- **Input:** `{"topic": "string", "year_from": integer, "year_to": integer}`
+- **Output:** `{"topic": string, "year_range": string, "total_papers": integer, "citation_count": integer, "source": string}`
+
+### systematic_review
+Comprehensive literature review across all databases, ranked by citations.
+- **Price:** $0.10
+- **Input:** `{"query": "string", "min_year": integer?, "domains": string[]?}`
+- **Output:** `{"query": string, "min_year": integer, "total_results": integer, "papers": array, "databases_searched": string[], "source": string}`
+
+---
+
+## Usage
+
+### Claude Desktop
+```json
+{
+  "mcpServers": {
+    "academic-research-mcp": {
+      "url": "https://academic-research-mcp.apify.actor/mcp?token=YOUR_APIFY_TOKEN"
+    }
+  }
+}
+```
+
+### cURL
+```bash
+curl -X POST "https://academic-research-mcp.apify.actor/mcp" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_APIFY_TOKEN" \
+  -d '{"tool": "search_papers", "params": {"query": "machine learning", "max_results": 5}}'
+```
+
+---
+
+## Data Sources
+
+| Source | Records | Type |
+|--------|---------|------|
+| CrossRef | 150M | Papers |
+| OpenAlex | 250M | Papers |
+| NIH RePORTER | 900K | Grants |
+| NSF Award API | 200K | Grants |
+
+---
+
+## Pricing Summary
+
+| Tool | Per 1,000 Calls |
+|------|-----------------|
+| search_papers | $20.00 |
+| get_paper_details | $10.00 |
+| find_citations | $20.00 |
+| find_grants | $30.00 |
+| institution_research_profile | $50.00 |
+| author_research_profile | $30.00 |
+| research_trends | $50.00 |
+| systematic_review | $100.00 |
+
+No subscription required. Pay per use via Apify PPE.
