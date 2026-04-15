@@ -249,20 +249,20 @@ async function findGrants(query, funderType = "all") {
             const resp = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query, limit: 10 })
+                body: JSON.stringify({ criteria: { query }, limit: 10 })
             });
             const data = await resp.json();
             for (const p of data.results || []) {
                 results.push({
                     title: p.project_title || "",
                     agency: "NIH",
-                    award_id: p.project_nums?.[0]?.project_num || "",
-                    amount: p.total_cost || 0,
-                    pi: p.pi_name || "",
-                    institution: p.agency_name || "",
+                    award_id: p.project_num || "",
+                    amount: p.award_amount || 0,
+                    pi: p.contact_pi_name || "",
+                    institution: p.organization?.org_name || "",
                     start_year: p.project_start_date?.slice(0, 4) || null,
-                    deadline: p.application_receive_date?.slice(0, 10) || null,
-                    url: `https://reporter.nih.gov/project/${p.project_id}`
+                    deadline: null,
+                    url: p.project_detail_url || `https://reporter.nih.gov/project/${p.appl_id}`
                 });
             }
         } catch (e) {
