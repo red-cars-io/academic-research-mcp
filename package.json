@@ -1,0 +1,14 @@
+{
+  "name": "academic-research-mcp",
+  "version": "1.0.0",
+  "description": "Academic Research MCP Server for AI agents",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.6.0"
+  }
+}

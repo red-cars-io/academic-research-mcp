@@ -1,0 +1,23 @@
+{
+  "actorSpecification": 1,
+  "name": "academic-research-mcp",
+  "title": "Academic Research MCP — AI Agent Research Librarian",
+  "description": "Search 600M+ academic papers, grants, and citations for AI agents. One tool call to CrossRef, OpenAlex, Semantic Scholar, DBLP, CORE, PubMed, NIH, and NSF.",
+  "version": "1.0.0",
+  "meta": {
+    "templateId": "standby-python"
+  },
+  "input": "./input_schema.json",
+  "readme": "./README.md",
+  "categories": [
+    "DEVELOPER_TOOLS",
+    "EDUCATION"
+  ],
+  "pricing": {
+    "model": "EVENT"
+  },
+  "defaultRunOptions": {
+    "memoryMbytes": 1024,
+    "timeoutSecs": 120
+  }
+}
