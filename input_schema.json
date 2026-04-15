@@ -8,13 +8,15 @@
       "type": "string",
       "description": "MCP tool to call",
       "enum": ["search_papers", "get_paper_details", "find_citations", "find_grants", "institution_research_profile", "author_research_profile", "research_trends", "systematic_review"],
-      "editor": "select"
+      "editor": "select",
+      "prefill": "search_papers"
     },
     "params": {
       "title": "Parameters (JSON)",
       "type": "object",
       "description": "Tool parameters as JSON object",
-      "editor": "json"
+      "editor": "json",
+      "prefill": {"query": "machine learning", "max_results": 1}
     }
   }
 }
