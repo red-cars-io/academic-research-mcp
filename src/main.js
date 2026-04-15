@@ -3,7 +3,7 @@
  * Search 600M+ academic papers, grants, and citations for AI agents.
  */
 
-import Apify from 'apify';
+import Apify, { Actor } from 'apify';
 
 // MCP manifest
 const MCP_MANIFEST = {
@@ -117,6 +117,18 @@ const MCP_MANIFEST = {
             price: 0.10
         }
     ]
+};
+
+// Tool price map (in USD)
+const TOOL_PRICES = {
+    "search_papers": 0.02,
+    "get_paper_details": 0.01,
+    "find_citations": 0.02,
+    "find_grants": 0.03,
+    "institution_research_profile": 0.05,
+    "author_research_profile": 0.03,
+    "research_trends": 0.05,
+    "systematic_review": 0.10
 };
 
 // Tool implementations
@@ -404,7 +416,18 @@ async function handleTool(toolName, params = {}) {
 
     const handler = handlers[toolName];
     if (handler) {
-        return await handler();
+        const result = await handler();
+        // Charge for the tool if pricing is defined
+        const price = TOOL_PRICES[toolName];
+        if (price) {
+            try {
+                await Actor.charge(price, { eventName: toolName });
+            } catch (e) {
+                // Charging may fail if PPE not enabled or budget exhausted - non-fatal
+                console.error("Charge failed:", e.message);
+            }
+        }
+        return result;
     }
     return { error: `Unknown tool: ${toolName}` };
 }
