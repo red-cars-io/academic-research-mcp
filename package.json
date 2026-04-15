@@ -1,6 +1,7 @@
 {
   "name": "academic-research-mcp",
   "version": "1.0.0",
+  "type": "module",
   "description": "Academic Research MCP Server for AI agents",
   "engines": {
     "node": ">=18.0.0"
