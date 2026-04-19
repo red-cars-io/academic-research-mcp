@@ -287,7 +287,7 @@ async function patentLandscapeByCompany(companyName, maxResults = 20) {
     // Search USPTO for company patents
     try {
         const usptoUrl = `https://developer.uspto.gov/api/v1/patents?searchText=${encodeURIComponent(companyName)}&rows=${maxResults}`;
-        const resp = await fetch(uspstoUrl, {
+        const resp = await fetch(usptoUrl, {
             headers: { 'Accept': 'application/json' }
         });
         if (resp.ok) {
@@ -301,7 +301,7 @@ async function patentLandscapeByCompany(companyName, maxResults = 20) {
                 source: "USPTO",
                 url: `https://patents.google.com/patent/${p.patentNumber || ""}`
             }));
-            results.push(...uspTO Patents);
+            results.push(...usptoPatents);
         }
     } catch (e) {
         console.error("USPTO landscape error:", e.message);
