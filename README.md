@@ -1,21 +1,20 @@
-# Academic Research MCP Server
+# Patent Search MCP Server
 
-> Search 600M+ academic papers, grants, and citations for AI agents.
+> Search patents across USPTO, EPO, and Google Patents for AI agents.
 
-**[View on Apify](https://apify.com/wdavalos/academic-research-mcp)** | **[MCP Endpoint](https://academic-research-mcp.apify.actor/mcp)**
+**[View on Apify](https://apify.com/red.cars/patent-search-mcp)** | **[MCP Endpoint](https://patent-search-mcp.apify.actor/mcp)**
 
 ---
 
 ## What It Does
 
-Give AI agents the ability to search academic literature, find grants, and analyze research profiles — with one tool call.
+Give AI agents the ability to search patent databases, analyze patent landscapes, and trace citation chains — with one tool call.
 
-- **600M+ papers** searchable across CrossRef, OpenAlex, Semantic Scholar, DBLP, CORE, PubMed
-- **NIH + NSF grants** searchable by topic
-- **Institution + author profiles** with h-index and publication stats
-- **Citation analysis** — find who cited a paper
-- **Research trends** — track topic popularity over time
-- **Systematic reviews** — deduplicated, citation-ranked results
+- **USPTO patents** — full US patent database search
+- **EPO patents** — European Patent Office search
+- **Google Patents** — aggregated patent data with citations
+- **Company landscapes** — full patent portfolios by assignee
+- **Citation tracking** — forward and backward citations
 
 ---
 
@@ -26,8 +25,8 @@ Add to your AI agent:
 ```json
 {
   "mcpServers": {
-    "academic-research-mcp": {
-      "url": "https://academic-research-mcp.apify.actor/mcp"
+    "patent-search-mcp": {
+      "url": "https://patent-search-mcp.apify.actor/mcp"
     }
   }
 }
@@ -38,8 +37,8 @@ Or with authentication:
 ```json
 {
   "mcpServers": {
-    "academic-research-mcp": {
-      "url": "https://academic-research-mcp.apify.actor/mcp?token=YOUR_APIFY_TOKEN"
+    "patent-search-mcp": {
+      "url": "https://patent-search-mcp.apify.actor/mcp?token=YOUR_APIFY_TOKEN"
     }
   }
 }
@@ -51,72 +50,87 @@ Or with authentication:
 
 | Tool | Price | Description |
 |------|-------|-------------|
-| `search_papers` | $0.02 | Search papers across all databases |
-| `get_paper_details` | $0.01 | Get metadata by DOI |
-| `find_citations` | $0.02 | Find papers citing a given paper |
-| `find_grants` | $0.03 | Search NIH, NSF, foundation grants |
-| `institution_research_profile` | $0.05 | Institution h-index, stats, topics |
-| `author_research_profile` | $0.03 | Author h-index, top papers, co-authors |
-| `research_trends` | $0.05 | Topic trends over time |
-| `systematic_review` | $0.10 | Full literature review across all DBs |
+| `search_patents` | $0.05 | Search by keyword, CPC code, or inventor |
+| `get_patent_details` | $0.03 | Full metadata, claims, assignee |
+| `find_patent_citations` | $0.05 | Forward/backward citation chain |
+| `patent_landscape_by_company` | $0.10 | Company patent portfolio + filing trends |
 
 ---
 
 ## Example Calls
 
-### Search Papers
+### Search Patents
 
 ```
-search_papers(query="transformer attention mechanism", max_results=10)
+search_patents(query="neural network transformer", max_results=10)
 ```
 
 Returns:
 ```json
 {
-  "title": "Attention Is All You Need",
-  "authors": ["Vaswani", "Shazeer", "Parmar", ...],
-  "year": 2017,
-  "doi": "10.48550/arXiv.1706.03762",
-  "journal": "NeurIPS",
-  "citations": 98000,
-  "source": "CrossRef"
+  "patent_number": "US10712345B2",
+  "title": "Attention mechanism for neural networks",
+  "inventors": ["Vaswani", "Shazeer"],
+  "filing_date": "2017-06-12",
+  "issue_date": "2020-08-25",
+  "assignee": "Google LLC",
+  "source": "USPTO",
+  "url": "https://patents.google.com/patent/US10712345B2"
 }
 ```
 
-### Find Grants
+### Get Patent Details
 
 ```
-find_grants(query="machine learning NLP", funder_type="all")
+get_patent_details(patent_number="US10123456", source="all")
 ```
 
 Returns:
 ```json
 {
-  "title": "Neural Network Interpretability for NLP",
-  "agency": "NSF",
-  "award_id": "NSF-2024-12345",
-  "amount": 500000,
-  "pi": "Dr. Jane Smith",
-  "institution": "MIT",
-  "deadline": "2024-05-15"
+  "patent_number": "US10123456",
+  "title": "Medical device with sensor array",
+  "abstract": "A medical device comprising...",
+  "assignee": "Medtronic PLC",
+  "source": "Google Patents",
+  "url": "https://patents.google.com/patent/US10123456",
+  "details_available": true
 }
 ```
 
-### Institution Profile
+### Find Citations
 
 ```
-institution_research_profile(institution_name="Stanford University")
+find_patent_citations(patent_number="US10712345B2", citation_type="forward")
 ```
 
 Returns:
 ```json
 {
-  "name": "Stanford University",
-  "country": "US",
-  "paper_count": 215000,
-  "citation_count": 8900000,
-  "h_index": 892,
-  "topics": ["machine learning", "AI", "NLP", ...]
+  "patent_number": "US10712345B2",
+  "forward_citations": [
+    {"patent_number": "US11012345", "source": "forward_citation"},
+    {"patent_number": "EP3456789", "source": "forward_citation"}
+  ],
+  "total": 156
+}
+```
+
+### Company Landscape
+
+```
+patent_landscape_by_company(company_name="Apple Inc", max_results=20)
+```
+
+Returns:
+```json
+{
+  "company_name": "Apple Inc",
+  "total_patents": 247,
+  "filing_trend": {"2020": 45, "2021": 52, "2022": 61, "2023": 89},
+  "top_patents": [...],
+  "technology_areas": ["semiconductor", "display", "wireless"],
+  "sources_searched": ["USPTO", "Google Patents"]
 }
 ```
 
@@ -124,54 +138,49 @@ Returns:
 
 ## How It Works
 
-**Phase 1: Query Parsing**
-- Receives tool call with query parameters
-- Validates input schema
+**Phase 1: Multi-Source Search**
+- Queries USPTO Patent Public Search API
+- Queries Google Patents
+- Queries EPO Open Patent Services (OPS)
+- All queries run in parallel for speed
 
-**Phase 2: Multi-Source Search**
-- Queries CrossRef (150M papers)
-- Queries OpenAlex (250M papers)
-- Queries Semantic Scholar (200M papers)
-- Queries NIH RePORTER (grants)
-- Queries NSF Award API (grants)
-- All queries run in parallel
+**Phase 2: Deduplication**
+- Removes duplicate patents by number
+- Preserves first-seen metadata
 
 **Phase 3: Aggregation**
-- Deduplicates results by DOI
-- Sorts by citation count
-- Returns structured JSON
+- Returns structured JSON with source attribution
+- Includes direct URLs to patent records
 
 ---
 
 ## Data Sources
 
-| Source | Records | Type |
-|--------|---------|------|
-| CrossRef | 150M | Papers, citations, funders |
-| OpenAlex | 250M | Papers, institutions, topics |
-| Semantic Scholar | 200M | Papers, AI summaries |
-| NIH RePORTER | 900K | Grants |
-| NSF Award API | 200K | Grants |
+| Source | Coverage | Type |
+|--------|----------|------|
+| USPTO | 12M+ US patents | Full text search |
+| EPO | 100M+ worldwide | Patent families |
+| Google Patents | Aggregated | Citations, assignments |
 
 ---
 
 ## Use Cases
 
-### Literature Review
-*"Find papers on transformer models for time series forecasting"*
-→ AI calls `search_papers` → Returns ranked papers with citations, abstracts, DOIs
+### Tech Transfer Evaluation
+*"Find patents from MIT researchers in the AI space"*
+→ AI calls `search_patents` with MIT inventor query → Returns MIT patent portfolio
 
-### Grant Discovery
-*"What grants exist for NLP research under $1M?"*
-→ AI calls `find_grants` → Returns matching grants with deadlines
+### Due Diligence
+*"What's Apple's patent strategy in electric vehicles?"*
+→ AI calls `patent_landscape_by_company` → Returns filing trends, top patents
 
 ### Citation Analysis
-*"Who has cited Bengio's 2018 Turing Award paper?"*
-→ AI calls `find_citations` → Returns all citing papers
+*"Who has cited the original transformer patent?"*
+→ AI calls `find_patent_citations` with citation_type="forward" → Returns citing patents
 
-### Institution Due Diligence
-*"What's the research profile of MIT's AI Lab?"*
-→ AI calls `institution_research_profile` → Returns h-index, stats, top topics
+### Freedom to Operate
+*"Are there blocking patents on our surgical robot design?"*
+→ AI calls `search_patents` with design keywords → Returns relevant patents
 
 ---
 
@@ -179,25 +188,22 @@ Returns:
 
 | Tool | Price |
 |------|-------|
-| `search_papers` | $0.02/call |
-| `get_paper_details` | $0.01/call |
-| `find_citations` | $0.02/call |
-| `find_grants` | $0.03/call |
-| `institution_research_profile` | $0.05/call |
-| `author_research_profile` | $0.03/call |
-| `research_trends` | $0.05/call |
-| `systematic_review` | $0.10/call |
+| `search_patents` | $0.05/call |
+| `get_patent_details` | $0.03/call |
+| `find_patent_citations` | $0.05/call |
+| `patent_landscape_by_company` | $0.10/call |
 
 No subscription required. Pay per use via Apify PPE.
 
 ---
 
-## Tips
+## Cross-Sell Triggers
 
-1. **Use specific queries** — "transformer attention NLP" returns better results than "AI"
-2. **Filter by year** — Add `year_from` and `year_to` to `research_trends`
-3. **Use DOI when possible** — `get_paper_details` returns more metadata with DOI
-4. **Combine tools** — Call multiple tools in sequence for comprehensive research
+This MCP complements the research intelligence cluster:
+
+- `university-research-mcp` → `patent_landscape` triggers → `patent-search-mcp`
+- `academic-research-mcp` → `find_citations` on patents → `find_patent_citations`
+- `healthcare-compliance-mcp` → FDA device approvals → patent history check
 
 ---
 
@@ -207,8 +213,8 @@ No subscription required. Pay per use via Apify PPE.
 ```json
 {
   "mcpServers": {
-    "academic-research-mcp": {
-      "url": "https://academic-research-mcp.apify.actor/mcp"
+    "patent-search-mcp": {
+      "url": "https://patent-search-mcp.apify.actor/mcp"
     }
   }
 }
@@ -219,16 +225,20 @@ Add the same JSON to your AI client config.
 
 ### cURL Example
 ```bash
-curl -X POST "https://academic-research-mcp.apify.actor/mcp" \
+curl -X POST "https://patent-search-mcp.apify.actor/mcp" \
   -H "Content-Type: application/json" \
-  -d '{"tool": "search_papers", "params": {"query": "mRNA vaccines", "max_results": 5}}'
+  -d '{"tool": "search_patents", "params": {"query": "neural network", "max_results": 5}}'
 ```
 
 ---
 
 ## Output Schema
 
-All tools return JSON. See individual tool documentation for specific field schemas.
+All tools return JSON. Each result includes:
+- `patent_number` — unique identifier
+- `title` — patent title
+- `source` — which database
+- `url` — direct link to record
 
 ---
 
@@ -236,5 +246,5 @@ All tools return JSON. See individual tool documentation for specific field sche
 
 - **Health**: Running
 - **Uptime**: 99.9%
-- **Rate Limits**: None enforced client-side (respect APIs' natural limits)
+- **Rate Limits**: Respect upstream API limits
 - **Support**: Open issue on GitHub

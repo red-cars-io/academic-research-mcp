@@ -19,5 +19,9 @@
   "defaultRunOptions": {
     "memoryMbytes": 1024,
     "timeoutSecs": 120
+  },
+  "webServer": {
+    "enabled": true,
+    "mcpPath": "/mcp"
   }
 }

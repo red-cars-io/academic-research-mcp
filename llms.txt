@@ -1,61 +1,37 @@
-# Academic Research MCP — AI Agent Research Librarian
+# Patent Search MCP — AI Agent Patent Intelligence
 
-Search 600M+ academic papers, grants, and citations for AI agents.
+Search patents across USPTO, EPO, and Google Patents for AI agents.
 
-**MCP Endpoint:** https://academic-research-mcp.apify.actor/mcp
-**Apify Store:** https://apify.com/xJbDa0jVpat4rNTan
+**MCP Endpoint:** https://patent-search-mcp.apify.actor/mcp
+**Apify Store:** https://apify.com/red.cars/patent-search-mcp
 
 ---
 
 ## Tools
 
-### search_papers
-Search academic papers across CrossRef and OpenAlex databases.
-- **Price:** $0.02
+### search_patents
+Search patents by keyword, CPC classification, or inventor name.
+- **Price:** $0.05
 - **Input:** `{"query": "string", "max_results": integer}`
-- **Output:** `[{"title": string, "authors": string, "year": integer, "doi": string, "journal": string, "citations": integer, "url": string, "source": string}]`
+- **Output:** `[{"patent_number": string, "title": string, "inventors": string[], "filing_date": string, "issue_date": string, "assignee": string, "source": string, "url": string}]`
 
-### get_paper_details
-Get detailed metadata for a paper by DOI.
-- **Price:** $0.01
-- **Input:** `{"doi": "string"}`
-- **Output:** `{"title": string, "authors": string, "year": integer, "doi": string, "abstract": string, "journal": string, "citations": integer, "funders": string[], "topics": string[], "source": string}`
-
-### find_citations
-Find papers that cite a specific paper.
-- **Price:** $0.02
-- **Input:** `{"doi": "string", "max_results": integer}`
-- **Output:** `[{"title": string, "authors": string, "year": integer, "doi": string, "journal": string, "citations": integer, "source": string}]`
-
-### find_grants
-Search funding opportunities from NIH and NSF.
+### get_patent_details
+Get full metadata, claims, and citations for a specific patent.
 - **Price:** $0.03
-- **Input:** `{"query": "string", "funder_type": "nih" | "nsf" | "foundation" | "all"}`
-- **Output:** `[{"title": string, "agency": string, "award_id": string, "amount": integer, "pi": string, "institution": string, "start_year": string, "deadline": string, "url": string}]`
+- **Input:** `{"patent_number": "string", "source": "uspto|epo|google|all"}`
+- **Output:** `{"patent_number": string, "title": string, "abstract": string, "assignee": string, "source": string, "url": string, "details_available": boolean}`
 
-### institution_research_profile
-Get research profile for an institution (h-index, paper counts, topics).
+### find_patent_citations
+Find forward citations (patents citing this) or backward citations (patents this cites).
 - **Price:** $0.05
-- **Input:** `{"institution_name": "string"}`
-- **Output:** `{"name": string, "country": string, "paper_count": integer, "citation_count": integer, "h_index": integer, "topics": string[], "source": string}`
+- **Input:** `{"patent_number": "string", "citation_type": "forward|backward|both"}`
+- **Output:** `{"patent_number": string, "forward_citations": array, "backward_citations": array, "total": integer}`
 
-### author_research_profile
-Get research profile for an author (h-index, top papers, affiliations).
-- **Price:** $0.03
-- **Input:** `{"author_name": "string", "institution": "string?"}`
-- **Output:** `{"name": string, "orcid": string, "paper_count": integer, "citation_count": integer, "h_index": integer, "institutions": string[], "top_papers": string[], "source": string}`
-
-### research_trends
-Analyze research trends for a topic over time.
-- **Price:** $0.05
-- **Input:** `{"topic": "string", "year_from": integer, "year_to": integer}`
-- **Output:** `{"topic": string, "year_range": string, "total_papers": integer, "citation_count": integer, "source": string}`
-
-### systematic_review
-Comprehensive literature review across all databases, ranked by citations.
+### patent_landscape_by_company
+Get full patent portfolio for a company including filing trends and technology areas.
 - **Price:** $0.10
-- **Input:** `{"query": "string", "min_year": integer?, "domains": string[]?}`
-- **Output:** `{"query": string, "min_year": integer, "total_results": integer, "papers": array, "databases_searched": string[], "source": string}`
+- **Input:** `{"company_name": "string", "max_results": integer}`
+- **Output:** `{"company_name": string, "total_patents": integer, "filing_trend": object, "top_patents": array, "technology_areas": string[], "sources_searched": string[]}`
 
 ---
 
@@ -65,8 +41,8 @@ Comprehensive literature review across all databases, ranked by citations.
 ```json
 {
   "mcpServers": {
-    "academic-research-mcp": {
-      "url": "https://academic-research-mcp.apify.actor/mcp?token=YOUR_APIFY_TOKEN"
+    "patent-search-mcp": {
+      "url": "https://patent-search-mcp.apify.actor/mcp?token=YOUR_APIFY_TOKEN"
     }
   }
 }
@@ -74,22 +50,21 @@ Comprehensive literature review across all databases, ranked by citations.
 
 ### cURL
 ```bash
-curl -X POST "https://academic-research-mcp.apify.actor/mcp" \
+curl -X POST "https://patent-search-mcp.apify.actor/mcp" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_APIFY_TOKEN" \
-  -d '{"tool": "search_papers", "params": {"query": "machine learning", "max_results": 5}}'
+  -d '{"tool": "search_patents", "params": {"query": "neural network", "max_results": 5}}'
 ```
 
 ---
 
 ## Data Sources
 
-| Source | Records | Type |
-|--------|---------|------|
-| CrossRef | 150M | Papers |
-| OpenAlex | 250M | Papers |
-| NIH RePORTER | 900K | Grants |
-| NSF Award API | 200K | Grants |
+| Source | Coverage | Type |
+|--------|----------|------|
+| USPTO | 12M+ US patents | Full text search |
+| EPO | 100M+ worldwide | Patent families |
+| Google Patents | Aggregated | Citations, assignments |
 
 ---
 
@@ -97,16 +72,37 @@ curl -X POST "https://academic-research-mcp.apify.actor/mcp" \
 
 | Tool | Per 1,000 Calls |
 |------|-----------------|
-| search_papers | $20.00 |
-| get_paper_details | $10.00 |
-| find_citations | $20.00 |
-| find_grants | $30.00 |
-| institution_research_profile | $50.00 |
-| author_research_profile | $30.00 |
-| research_trends | $50.00 |
-| systematic_review | $100.00 |
+| search_patents | $50.00 |
+| get_patent_details | $30.00 |
+| find_patent_citations | $50.00 |
+| patent_landscape_by_company | $100.00 |
 
 No subscription required. Pay per use via Apify PPE.
+
+## Use Cases
+
+- Tech transfer evaluation
+- Patent due diligence
+- Freedom to operate analysis
+- Citation tracking for IP strategy
+
+---
+
+## Related MCPs
+
+- academic-research-mcp — Academic paper search
+- university-research-mcp — Institution profiles
+- healthcare-compliance-mcp — FDA device compliance
+
+## Cross-Sell Chain
+
+```
+university-research-mcp → patent_landscape triggers → patent-search-mcp
+academic-research-mcp → find_citations on patents → find_patent_citations
+healthcare-compliance-mcp → device patents → get_patent_details
+```
+
+---
 
 ## Apify Free Account Usage
 
@@ -119,10 +115,3 @@ To get started:
 1. Create free Apify account at https://apify.com
 2. Get your API token from https://console.apify.com/account
 3. Pass token as query param: `?token=YOUR_APIFY_TOKEN` or `Authorization: Bearer` header
-
-Example with token:
-```bash
-curl -X POST "https://academic-research-mcp.apify.actor/mcp?token=YOUR_APIFY_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"tool": "search_papers", "params": {"query": "machine learning"}}'
-```

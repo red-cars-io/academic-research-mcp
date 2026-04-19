@@ -1,8 +1,8 @@
 {
-  "name": "academic-research-mcp",
+  "name": "patent-search-mcp",
   "version": "1.0.0",
   "type": "module",
-  "description": "Academic Research MCP Server for AI agents",
+  "description": "Patent search MCP Server for AI agents — search USPTO, EPO, and Google Patents",
   "engines": {
     "node": ">=18.0.0"
   },

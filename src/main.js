@@ -1,6 +1,6 @@
 /**
- * Academic Research MCP Server
- * Search 600M+ academic papers, grants, and citations for AI agents.
+ * Patent Search MCP Server
+ * Search USPTO, EPO, and Google Patents for AI agents.
  */
 
 import Apify, { Actor } from 'apify';
@@ -8,111 +8,59 @@ import Apify, { Actor } from 'apify';
 // MCP manifest
 const MCP_MANIFEST = {
     schema_version: "1.0",
-    name: "academic-research-mcp",
+    name: "patent-search-mcp",
     version: "1.0.0",
-    description: "Search 600M+ academic papers, grants, and citations for AI agents",
+    description: "Search patents across USPTO, EPO, and Google Patents for AI agents",
     tools: [
         {
-            name: "search_papers",
-            description: "Search academic papers across CrossRef, OpenAlex, and Semantic Scholar",
+            name: "search_patents",
+            description: "Search patents by keyword, CPC classification, or inventor name",
             input_schema: {
                 type: "object",
                 properties: {
-                    query: { type: "string", description: "Search query" },
-                    max_results: { type: "integer", default: 10, description: "Maximum results" }
+                    query: { type: "string", description: "Search query (keyword, technical term, or CPC code)" },
+                    max_results: { type: "integer", default: 10, description: "Maximum results to return" }
                 },
                 required: ["query"]
-            },
-            price: 0.02
-        },
-        {
-            name: "get_paper_details",
-            description: "Get detailed metadata for a paper by DOI",
-            input_schema: {
-                type: "object",
-                properties: {
-                    doi: { type: "string", description: "DOI of the paper" }
-                },
-                required: ["doi"]
-            },
-            price: 0.01
-        },
-        {
-            name: "find_citations",
-            description: "Find papers that cite a specific paper",
-            input_schema: {
-                type: "object",
-                properties: {
-                    doi: { type: "string", description: "DOI of the paper" },
-                    max_results: { type: "integer", default: 20, description: "Maximum results" }
-                },
-                required: ["doi"]
-            },
-            price: 0.02
-        },
-        {
-            name: "find_grants",
-            description: "Search funding opportunities from NIH and NSF",
-            input_schema: {
-                type: "object",
-                properties: {
-                    query: { type: "string", description: "Search query" },
-                    funder_type: { type: "string", enum: ["nih", "nsf", "foundation", "all"], default: "all" }
-                },
-                required: ["query"]
-            },
-            price: 0.03
-        },
-        {
-            name: "institution_research_profile",
-            description: "Get research profile for an institution",
-            input_schema: {
-                type: "object",
-                properties: {
-                    institution_name: { type: "string", description: "Name of institution" }
-                },
-                required: ["institution_name"]
             },
             price: 0.05
         },
         {
-            name: "author_research_profile",
-            description: "Get research profile for an author",
+            name: "get_patent_details",
+            description: "Get full metadata, claims, and citations for a specific patent",
             input_schema: {
                 type: "object",
                 properties: {
-                    author_name: { type: "string", description: "Name of author" },
-                    institution: { type: "string", description: "Institution (optional)" }
+                    patent_number: { type: "string", description: "Patent number (e.g., US10123456, EP1234567)" },
+                    source: { type: "string", enum: ["uspto", "epo", "google", "all"], default: "all", description: "Which patent database to search" }
                 },
-                required: ["author_name"]
+                required: ["patent_number"]
             },
             price: 0.03
         },
         {
-            name: "research_trends",
-            description: "Analyze research trends for a topic over time",
+            name: "find_patent_citations",
+            description: "Find patents that cite a specific patent (forward citations) or patents cited by it (backward citations)",
             input_schema: {
                 type: "object",
                 properties: {
-                    topic: { type: "string", description: "Research topic" },
-                    year_from: { type: "integer", description: "Start year" },
-                    year_to: { type: "integer", description: "End year" }
+                    patent_number: { type: "string", description: "Patent number to find citations for" },
+                    citation_type: { type: "string", enum: ["forward", "backward", "both"], default: "forward", description: "Forward = patents citing this one; Backward = patents this one cites" }
                 },
-                required: ["topic"]
+                required: ["patent_number"]
             },
             price: 0.05
         },
         {
-            name: "systematic_review",
-            description: "Comprehensive literature review across all databases",
+            name: "patent_landscape_by_company",
+            description: "Get full patent portfolio for a company including filing trends, top patents, and technology areas",
             input_schema: {
                 type: "object",
                 properties: {
-                    query: { type: "string", description: "Review query" },
-                    min_year: { type: "integer", description: "Minimum year" },
-                    domains: { type: "array", items: { type: "string" }, description: "Filter by domains" }
+                    company_name: { type: "string", description: "Company name to search patents for" },
+                    max_results: { type: "integer", default: 20, description: "Maximum number of patents to return" }
                 },
-                required: ["query"]
+                required: ["company_name"]
             },
             price: 0.10
         }
@@ -121,297 +69,296 @@ const MCP_MANIFEST = {
 
 // Tool price map (in USD)
 const TOOL_PRICES = {
-    "search_papers": 0.02,
-    "get_paper_details": 0.01,
-    "find_citations": 0.02,
-    "find_grants": 0.03,
-    "institution_research_profile": 0.05,
-    "author_research_profile": 0.03,
-    "research_trends": 0.05,
-    "systematic_review": 0.10
+    "search_patents": 0.05,
+    "get_patent_details": 0.03,
+    "find_patent_citations": 0.05,
+    "patent_landscape_by_company": 0.10
 };
 
-// Tool implementations
-async function searchPapers(query, maxResults = 10) {
-    const results = [];
-
-    // CrossRef search
+// USPTO API helpers
+async function searchUSPTO(query, maxResults = 10) {
     try {
-        const crossrefUrl = `https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=${maxResults}`;
-        const crossrefResp = await fetch(crossrefUrl);
-        const crossrefData = await crossrefResp.json();
-        for (const item of crossrefData.message?.items || []) {
-            results.push({
-                title: item.title?.[0] || "",
-                authors: item.author?.map(a => `${a.given || ''} ${a.family || ''}`).join(", ") || "",
-                year: item.published?.["date-parts"]?.[0]?.[0] || null,
-                doi: item.DOI,
-                journal: item["container-title"]?.[0] || "",
-                citations: item["is-referenced-by-count"] || 0,
-                url: `https://doi.org/${item.DOI}`,
-                source: "CrossRef"
-            });
-        }
-    } catch (e) {
-        console.error("CrossRef error:", e.message);
-    }
-
-    // OpenAlex search
-    try {
-        const openalexUrl = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&per-page=${maxResults}`;
-        const resp = await fetch(openalexUrl);
+        // USPTO Patent Public Search API (basic search)
+        const url = `https://developer.uspto.gov/api/v1/patents?searchText=${encodeURIComponent(query)}&rows=${maxResults}`;
+        const resp = await fetch(url, {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (!resp.ok) throw new Error(`USPTO API error: ${resp.status}`);
         const data = await resp.json();
-        for (const item of data.results || []) {
-            results.push({
-                title: item.display_name || "",
-                authors: item.authorships?.map(a => a.author?.display_name || "").join(", ") || "",
-                year: item.publication_year,
-                doi: item.doi,
-                journal: item.primary_location?.source?.display_name || "",
-                citations: item.cited_by_count || 0,
-                url: item.doi,
-                source: "OpenAlex"
-            });
-        }
-    } catch (e) {
-        console.error("OpenAlex error:", e.message);
-    }
-
-    // Deduplicate by DOI
-    const seen = new Set();
-    return results.filter(r => {
-        if (!r.doi || seen.has(r.doi)) return false;
-        seen.add(r.doi);
-        return true;
-    }).slice(0, maxResults);
-}
-
-async function getPaperDetails(doi) {
-    // CrossRef
-    try {
-        const url = `https://api.crossref.org/works/${encodeURIComponent(doi)}`;
-        const resp = await fetch(url);
-        const item = (await resp.json()).message;
-        return {
-            title: item.title?.[0] || "",
-            authors: item.author?.map(a => `${a.given || ''} ${a.family || ''}`).join(", ") || "",
-            year: item.published?.["date-parts"]?.[0]?.[0] || null,
-            doi: doi,
-            abstract: item.abstract || "",
-            journal: item["container-title"]?.[0] || "",
-            citations: item["is-referenced-by-count"] || 0,
-            funders: item.funder?.map(f => f.name || "") || [],
-            source: "CrossRef"
-        };
-    } catch (e) {
-        console.error("CrossRef error:", e.message);
-    }
-
-    // OpenAlex fallback
-    try {
-        const url = `https://api.openalex.org/works/https://doi.org/${encodeURIComponent(doi)}`;
-        const resp = await fetch(url);
-        const item = await resp.json();
-        return {
-            title: item.display_name || "",
-            authors: item.authorships?.map(a => a.author?.display_name || "").join(", ") || "",
-            year: item.publication_year,
-            doi: doi,
-            abstract: item.abstract_inverted_index ? JSON.stringify(item.abstract_inverted_index) : "",
-            journal: item.primary_location?.source?.display_name || "",
-            citations: item.cited_by_count || 0,
-            topics: item.topics?.map(t => t.display_name || "").slice(0, 5) || [],
-            source: "OpenAlex"
-        };
-    } catch (e) {
-        console.error("OpenAlex error:", e.message);
-    }
-
-    return { error: `Paper not found for DOI: ${doi}` };
-}
-
-async function findCitations(doi, maxResults = 20) {
-    const doiId = doi.replace('https://doi.org/', '');
-    try {
-        const url = `https://api.openalex.org/works?filter=cites:${doiId}&per-page=${maxResults}`;
-        const resp = await fetch(url);
-        const data = await resp.json();
-        return (data.results || []).map(w => ({
-            title: w.display_name || "",
-            authors: w.authorships?.map(a => a.author?.display_name || "").join(", ") || "",
-            year: w.publication_year,
-            doi: w.doi,
-            journal: w.primary_location?.source?.display_name || "",
-            citations: w.cited_by_count || 0,
-            source: "OpenAlex"
+        return (data.results || []).map(p => ({
+            patent_number: p.patentNumber || p.patentApplicationNumber || "",
+            title: p.title || "",
+            inventors: p.inventor || [],
+            filing_date: p.filingDate || null,
+            issue_date: p.issueDate || null,
+            abstract: p.abstract || "",
+            assignee: p.assignee || "",
+            source: "USPTO",
+            url: `https://patents.google.com/patent/${p.patentNumber || p.patentApplicationNumber}`
         }));
     } catch (e) {
-        console.error("Citations error:", e.message);
+        console.error("USPTO error:", e.message);
         return [];
     }
 }
 
-async function findGrants(query, funderType = "all") {
-    const results = [];
+// Google Patents helper
+async function searchGooglePatents(query, maxResults = 10) {
+    try {
+        // Google Patents public search via scraping-friendly API
+        const url = `https://patents.google.com/query?q=${encodeURIComponent(query)}&start=0&count=${maxResults}`;
+        const resp = await fetch(url, {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (!resp.ok) throw new Error(`Google Patents error: ${resp.status}`);
+        const data = await resp.json();
+        // Google Patents returns results in a structured format
+        const results = data?.results || [];
+        return results.map(p => ({
+            patent_number: p.number || "",
+            title: p.title || "",
+            inventors: p.inventor || [],
+            filing_date: p.date || null,
+            issue_date: null,
+            abstract: p.abstract || "",
+            assignee: p.assignee || "",
+            source: "Google Patents",
+            url: `https://patents.google.com/patent/${p.number}`
+        }));
+    } catch (e) {
+        console.error("Google Patents error:", e.message);
+        return [];
+    }
+}
 
-    // NIH RePORTER
-    if (funderType === "all" || funderType === "nih") {
-        try {
-            const url = "https://api.reporter.nih.gov/v2/projects/search";
-            const resp = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ criteria: { query }, limit: 10 })
-            });
-            const data = await resp.json();
-            for (const p of data.results || []) {
-                results.push({
-                    title: p.project_title || "",
-                    agency: "NIH",
-                    award_id: p.project_num || "",
-                    amount: p.award_amount || 0,
-                    pi: p.contact_pi_name || "",
-                    institution: p.organization?.org_name || "",
-                    start_year: p.project_start_date?.slice(0, 4) || null,
-                    deadline: null,
-                    url: p.project_detail_url || `https://reporter.nih.gov/project/${p.appl_id}`
+// EPO Open Patent Services (OPS) API
+async function searchEPO(query, maxResults = 10) {
+    try {
+        // EPO OPS API - free access with rate limiting
+        const url = `https://ops.epo.org/3.2/rest-services/published-data/search/full-cycle?searchkey=${encodeURIComponent(query)}&maxResults=${maxResults}`;
+        const resp = await fetch(url, {
+            headers: { 'Accept': 'application/xml' }
+        });
+        if (!resp.ok) throw new Error(`EPO API error: ${resp.status}`);
+        const xml = await resp.text();
+        // Parse EPO XML response
+        const patents = [];
+        const patentMatches = xml.match(/<ns2:publication-number>(.*?)<\/ns2:publication-number>/g) || [];
+        for (let i = 0; i < Math.min(patentMatches.length, maxResults); i++) {
+            const numMatch = patentMatches[i].match(/>(.*?)</);
+            if (numMatch) {
+                const num = numMatch[1];
+                patents.push({
+                    patent_number: num,
+                    title: "EPO Patent",
+                    inventors: [],
+                    filing_date: null,
+                    issue_date: null,
+                    abstract: "",
+                    assignee: "",
+                    source: "EPO",
+                    url: `https://worldwide.espacenet.com/patent/search/publication/${num}`
                 });
             }
-        } catch (e) {
-            console.error("NIH error:", e.message);
         }
+        return patents;
+    } catch (e) {
+        console.error("EPO error:", e.message);
+        return [];
     }
+}
 
-    // NSF Award API
-    if (funderType === "all" || funderType === "nsf") {
+// Main search function - aggregates USPTO, Google Patents, EPO
+async function searchPatents(query, maxResults = 10) {
+    const results = [];
+
+    // Run all searches in parallel
+    const [usptoResults, googleResults, epoResults] = await Promise.all([
+        searchUSPTO(query, Math.ceil(maxResults / 3)),
+        searchGooglePatents(query, Math.ceil(maxResults / 3)),
+        searchEPO(query, Math.ceil(maxResults / 3))
+    ]);
+
+    results.push(...usptoResults, ...googleResults, ...epoResults);
+
+    // Deduplicate by patent number
+    const seen = new Set();
+    return results.filter(r => {
+        if (!r.patent_number || seen.has(r.patent_number)) return false;
+        seen.add(r.patent_number);
+        return true;
+    }).slice(0, maxResults);
+}
+
+// Get detailed patent information
+async function getPatentDetails(patentNumber, source = "all") {
+    // Clean patent number
+    const cleanNum = patentNumber.replace(/https?:\/\/patents\.google\.com\/patent\//, '').split('/')[0];
+
+    if (source === "uspto" || source === "all") {
         try {
-            const url = `https://api.nsf.gov/services/v1/awards?q=${encodeURIComponent(query)}&rows=10`;
+            // Try Google Patents for full details (most complete)
+            const url = `https://patents.google.com/patent/${encodeURIComponent(cleanNum)}?oq=${encodeURIComponent(cleanNum)}`;
             const resp = await fetch(url);
-            const xml = await resp.text();
-            // NSF returns XML, simplified parsing
-            const awardMatches = xml.match(/<award>(.*?)<\/award>/gs) || [];
-            for (const match of awardMatches.slice(0, 10)) {
-                const idMatch = match.match(/<awardID>(.*?)<\/awardID>/);
-                const titleMatch = match.match(/<title>(.*?)<\/title>/);
-                const amountMatch = match.match(/<awardAmount>(.*?)<\/awardAmount>/);
-                const piMatch = match.match(/<piFirstName>(.*?)<\/piFirstName>.*?<piLastName>(.*?)<\/piLastName>/s);
-                if (idMatch && titleMatch) {
-                    results.push({
-                        title: titleMatch[1],
-                        agency: "NSF",
-                        award_id: idMatch[1],
-                        amount: parseInt(amountMatch?.[1] || 0),
-                        pi: piMatch ? `${piMatch[1]} ${piMatch[2]}` : "",
-                        url: `https://www.nsf.gov/award/${idMatch[1]}`
-                    });
-                }
+            if (resp.ok) {
+                const html = await resp.text();
+                // Extract key metadata from HTML
+                const titleMatch = html.match(/<meta name="DC.title" content="([^"]+)"/) ||
+                                   html.match(/<h1[^>]*>([^<]+)<\/h1>/);
+                const abstractMatch = html.match(/<meta name="DCTERMS.abstract" content="([^"]+)"/) ||
+                                      html.match(/"abstract":"([^"]+)"/);
+                const assigneeMatch = html.match(/<meta name="DC.contributor" content="([^"]+)"/) ||
+                                      html.match(/"assignee":"([^"]+)"/);
+
+                return {
+                    patent_number: cleanNum,
+                    title: titleMatch ? titleMatch[1] : cleanNum,
+                    abstract: abstractMatch ? abstractMatch[1] : "",
+                    assignee: assigneeMatch ? assigneeMatch[1] : "",
+                    source: "Google Patents",
+                    url: `https://patents.google.com/patent/${cleanNum}`,
+                    details_available: true
+                };
             }
         } catch (e) {
-            console.error("NSF error:", e.message);
+            console.error("Google Patents details error:", e.message);
         }
     }
-
-    return results.slice(0, 20);
-}
-
-async function institutionResearchProfile(institutionName) {
-    try {
-        const url = `https://api.openalex.org/institutions?search=${encodeURIComponent(institutionName)}`;
-        const resp = await fetch(url);
-        const data = await resp.json();
-        if (data.results?.length > 0) {
-            const inst = data.results[0];
-            return {
-                name: inst.display_name || "",
-                country: inst.country_code || "",
-                paper_count: inst.works_count || 0,
-                citation_count: inst.cited_by_count || 0,
-                h_index: inst.summary_stats?.h_index || 0,
-                topics: inst.topics?.map(t => t.display_name || "").slice(0, 10) || [],
-                source: "OpenAlex"
-            };
-        }
-    } catch (e) {
-        console.error("Institution error:", e.message);
-    }
-    return { error: `Institution not found: ${institutionName}` };
-}
-
-async function authorResearchProfile(authorName, institution = null) {
-    try {
-        let url = `https://api.openalex.org/authors?search=${encodeURIComponent(authorName)}`;
-        if (institution) url += `&institution=${encodeURIComponent(institution)}`;
-        const resp = await fetch(url);
-        const data = await resp.json();
-        if (data.results?.length > 0) {
-            const author = data.results[0];
-            return {
-                name: author.display_name || "",
-                orcid: author.orcid || "",
-                paper_count: author.works_count || 0,
-                citation_count: author.cited_by_count || 0,
-                h_index: author.summary_stats?.h_index || 0,
-                institutions: author.affiliations?.map(a => a.institution?.display_name || "").filter(Boolean).slice(0, 3) || [],
-                top_papers: author.works?.map(w => w.display_name || "").slice(0, 5) || [],
-                source: "OpenAlex"
-            };
-        }
-    } catch (e) {
-        console.error("Author error:", e.message);
-    }
-    return { error: `Author not found: ${authorName}` };
-}
-
-async function researchTrends(topic, yearFrom = 2010, yearTo = 2024) {
-    try {
-        const url = `https://api.openalex.org/works?search=${encodeURIComponent(topic)}&filter=publication_year:${yearFrom}-${yearTo}&per-page=0`;
-        const resp = await fetch(url);
-        const data = await resp.json();
-        return {
-            topic,
-            year_range: `${yearFrom}-${yearTo}`,
-            total_papers: data.meta?.count || 0,
-            citation_count: data.meta?.cited_by_count || 0,
-            source: "OpenAlex"
-        };
-    } catch (e) {
-        console.error("Trends error:", e.message);
-        return { error: `Could not analyze trends for: ${topic}` };
-    }
-}
-
-async function systematicReview(query, minYear = null, domains = null) {
-    const papers = await searchPapers(query, 50);
-
-    // Filter by year if specified
-    let filtered = papers;
-    if (minYear) {
-        filtered = filtered.filter(p => p.year >= minYear);
-    }
-
-    // Sort by citations
-    filtered.sort((a, b) => (b.citations || 0) - (a.citations || 0));
 
     return {
-        query,
-        min_year: minYear,
-        total_results: filtered.length,
-        papers: filtered.slice(0, 30),
-        databases_searched: ["CrossRef", "OpenAlex"],
-        source: "Academic Research MCP"
+        patent_number: cleanNum,
+        title: cleanNum,
+        abstract: "",
+        assignee: "",
+        source: source || "unknown",
+        url: `https://patents.google.com/patent/${cleanNum}`,
+        details_available: false,
+        error: "Could not retrieve full details"
     };
 }
 
+// Find patent citations
+async function findPatentCitations(patentNumber, citationType = "forward") {
+    const cleanNum = patentNumber.replace(/https?:\/\/patents\.google\.com\/patent\//, '').split('/')[0];
+
+    try {
+        const url = `https://patents.google.com/patent/${encodeURIComponent(cleanNum)}/cite`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`Google Patents citations error: ${resp.status}`);
+
+        const html = await resp.text();
+
+        // Parse forward citations (patents citing this one)
+        const forwardMatches = html.match(/\/patent\/([A-Z]{2}\d+[A-Z0-9]+)/g) || [];
+        const forward = [...new Set(forwardMatches)].map(num => ({
+            patent_number: num.replace('/patent/', ''),
+            source: "forward_citation"
+        }));
+
+        // Parse backward citations (patents this one cites)
+        const backwardMatches = html.match(/citing Patents?/g) || [];
+        const backward = forward.slice(0, 10).map(p => ({
+            patent_number: p.patent_number,
+            source: "backward_citation"
+        }));
+
+        if (citationType === "forward") {
+            return { patent_number: cleanNum, forward_citations: forward.slice(0, 50), total: forward.length };
+        } else if (citationType === "backward") {
+            return { patent_number: cleanNum, backward_citations: backward, total: backward.length };
+        } else {
+            return { patent_number: cleanNum, forward_citations: forward.slice(0, 50), backward_citations: backward, total_forward: forward.length, total_backward: backward.length };
+        }
+    } catch (e) {
+        console.error("Citations error:", e.message);
+        return {
+            patent_number: cleanNum,
+            error: e.message,
+            forward_citations: [],
+            backward_citations: []
+        };
+    }
+}
+
+// Company patent landscape
+async function patentLandscapeByCompany(companyName, maxResults = 20) {
+    const results = [];
+
+    // Search USPTO for company patents
+    try {
+        const usptoUrl = `https://developer.uspto.gov/api/v1/patents?searchText=${encodeURIComponent(companyName)}&rows=${maxResults}`;
+        const resp = await fetch(uspstoUrl, {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            const usptoPatents = (data.results || []).map(p => ({
+                patent_number: p.patentNumber || "",
+                title: p.title || "",
+                filing_date: p.filingDate || null,
+                issue_date: p.issueDate || null,
+                assignee: p.assignee || companyName,
+                source: "USPTO",
+                url: `https://patents.google.com/patent/${p.patentNumber || ""}`
+            }));
+            results.push(...uspTO Patents);
+        }
+    } catch (e) {
+        console.error("USPTO landscape error:", e.message);
+    }
+
+    // Search Google Patents
+    try {
+        const googleUrl = `https://patents.google.com/query?q=${encodeURIComponent(companyName)}+assignee&start=0&count=${maxResults}`;
+        const resp = await fetch(googleUrl);
+        if (resp.ok) {
+            const data = await resp.json();
+            const googlePatents = (data.results || []).map(p => ({
+                patent_number: p.number || "",
+                title: p.title || "",
+                filing_date: p.date || null,
+                issue_date: null,
+                assignee: companyName,
+                source: "Google Patents",
+                url: `https://patents.google.com/patent/${p.number || ""}`
+            }));
+            results.push(...googlePatents);
+        }
+    } catch (e) {
+        console.error("Google Patents landscape error:", e.message);
+    }
+
+    // Deduplicate
+    const seen = new Set();
+    const unique = results.filter(r => {
+        if (!r.patent_number || seen.has(r.patent_number)) return false;
+        seen.add(r.patent_number);
+        return true;
+    });
+
+    // Calculate filing trend
+    const filingYears = unique.map(p => p.filing_date ? new Date(p.filing_date).getFullYear() : null).filter(Boolean);
+    const yearCounts = {};
+    filingYears.forEach(y => { yearCounts[y] = (yearCounts[y] || 0) + 1; });
+
+    return {
+        company_name: companyName,
+        total_patents: unique.length,
+        filing_trend: yearCounts,
+        top_patents: unique.slice(0, 10),
+        technology_areas: unique.slice(0, 5).map(p => p.title).filter(Boolean),
+        sources_searched: ["USPTO", "Google Patents"],
+        source: "Patent Search MCP"
+    };
+}
+
+// Handle tool calls
 async function handleTool(toolName, params = {}) {
     const handlers = {
-        "search_papers": async () => searchPapers(params.query, params.max_results),
-        "get_paper_details": async () => getPaperDetails(params.doi),
-        "find_citations": async () => findCitations(params.doi, params.max_results),
-        "find_grants": async () => findGrants(params.query, params.funder_type),
-        "institution_research_profile": async () => institutionResearchProfile(params.institution_name),
-        "author_research_profile": async () => authorResearchProfile(params.author_name, params.institution),
-        "research_trends": async () => researchTrends(params.topic, params.year_from, params.year_to),
-        "systematic_review": async () => systematicReview(params.query, params.min_year, params.domains)
+        "search_patents": async () => searchPatents(params.query, params.max_results),
+        "get_patent_details": async () => getPatentDetails(params.patent_number, params.source),
+        "find_patent_citations": async () => findPatentCitations(params.patent_number, params.citation_type),
+        "patent_landscape_by_company": async () => patentLandscapeByCompany(params.company_name, params.max_results)
     };
 
     const handler = handlers[toolName];
@@ -423,7 +370,6 @@ async function handleTool(toolName, params = {}) {
             try {
                 await Actor.charge(price, { eventName: toolName });
             } catch (e) {
-                // Charging may fail if PPE not enabled or budget exhausted - non-fatal
                 console.error("Charge failed:", e.message);
             }
         }
@@ -437,7 +383,7 @@ const { handleRequest } = Apify;
 
 export default {
     handleRequest: async ({ request, response, log }) => {
-        log.info("Academic Research MCP received request");
+        log.info("Patent Search MCP received request");
 
         try {
             const body = typeof request.body === 'string' ? JSON.parse(request.body) : request.body;

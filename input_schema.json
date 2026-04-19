@@ -1,5 +1,5 @@
 {
-  "title": "Academic Research MCP",
+  "title": "Patent Search MCP",
   "type": "object",
   "schemaVersion": 1,
   "properties": {
@@ -7,9 +7,9 @@
       "title": "Tool Name",
       "type": "string",
       "description": "MCP tool to call",
-      "enum": ["search_papers", "get_paper_details", "find_citations", "find_grants", "institution_research_profile", "author_research_profile", "research_trends", "systematic_review"],
+      "enum": ["search_patents", "get_patent_details", "find_patent_citations", "patent_landscape_by_company"],
       "editor": "select",
-      "prefill": "search_papers"
+      "prefill": "search_patents"
     },
     "params": {
       "title": "Parameters (JSON)",
