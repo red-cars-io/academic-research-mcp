@@ -60,6 +60,38 @@ Or with authentication:
 | `research_trends` | $0.05 | Topic trends over time |
 | `systematic_review` | $0.10 | Full literature review across all DBs |
 
+### search_papers
+**When to call:** Persona: Research librarian or AI agent doing literature review. Scenario: Finding academic papers on a specific topic ranked by citation count.
+**Example AI prompt:** "Find papers on transformer attention mechanisms for time series forecasting from 2020 onwards, show top 10 by citations."
+
+### get_paper_details
+**When to call:** Persona: Academic writer or researcher. Scenario: Getting full metadata and abstract for a specific paper identified during search.
+**Example AI prompt:** "Get full details for DOI 10.48550/arXiv.1706.03762 including abstract, authors, and funding information."
+
+### find_citations
+**When to call:** Persona: Academic researcher or literature reviewer. Scenario: Tracing how a foundational paper has been built upon in subsequent research.
+**Example AI prompt:** "Find all papers that cite Bengio's 2018 Turing Award paper, show the most recent first."
+
+### find_grants
+**When to call:** Persona: Grant writer or research administrator. Scenario: Finding active funding opportunities for a research topic before submitting a proposal.
+**Example AI prompt:** "Find NIH and NSF grants for NLP research under $1M with deadlines in 2026."
+
+### institution_research_profile
+**When to call:** Persona: VC analyst or academic partnership manager. Scenario: Assessing research strength of a university for partnership or investment.
+**Example AI prompt:** "What's the research profile of MIT's AI Lab — show h-index, top topics, and recent publication counts."
+
+### author_research_profile
+**When to call:** Persona: Talent scout or collaboration strategist. Scenario: Finding prolific researchers in a specific field for collaboration or recruitment.
+**Example AI prompt:** "Show me the top 10 researchers at Stanford working on machine learning with their h-index and top papers."
+
+### research_trends
+**When to call:** Persona: Research strategist or investment analyst. Scenario: Understanding whether a research area is growing or declining to inform strategic decisions.
+**Example AI prompt:** "Show me the research trends for CRISPR technology over the last 10 years — publication volume and citation growth."
+
+### systematic_review
+**When to call:** Persona: Academic researcher or medical writer. Scenario: Generating a comprehensive literature review for a systematic review paper or meta-analysis.
+**Example AI prompt:** "Do a systematic review of mRNA vaccine research from 2020-2025, show top 50 papers ranked by citations across all databases."
+
 ---
 
 ## Example Calls
@@ -238,3 +270,9 @@ All tools return JSON. See individual tool documentation for specific field sche
 - **Uptime**: 99.9%
 - **Rate Limits**: None enforced client-side (respect APIs' natural limits)
 - **Support**: Open issue on GitHub
+
+---
+
+## SEO Keywords
+
+OpenAlex alternative, CrossRef API, Semantic Scholar, NIH grants lookup, NSF award search, academic paper search, citation analysis, systematic review, no API key needed, AI agent, MCP server, academic research automation, ORCID author search, arXiv preprint search, CrossRef, PubMed, DBLP, CORE
