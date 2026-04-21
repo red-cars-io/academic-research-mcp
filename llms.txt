@@ -1,59 +1,48 @@
-# Academic Research MCP — AI Agent Research Librarian
+# Academic Research MCP
 
-Search 600M+ academic papers, grants, and citations for AI agents.
+Search 600M+ academic papers, grants, and citations for AI agents doing literature review and due diligence.
 
-**MCP Endpoint:** https://academic-research-mcp.apify.actor/mcp
-**Apify Store:** https://apify.com/xJbDa0jVpat4rNTan
+## When to call
 
----
+Use this MCP when you need to:
+- Find papers on a specific topic ranked by citations
+- Get paper details by DOI (abstract, authors, funding)
+- Trace citations forward to find follow-on research
+- Find NIH/NSF grants for a research topic
+- Profile a researcher or institution's research output
+- Analyze research trends over time
+- Conduct a systematic literature review
 
 ## Tools
 
-### search_papers
-**Purpose:** Search academic papers across CrossRef, OpenAlex, Semantic Scholar, DBLP, CORE, and PubMed databases.
-**When to call:** Persona: Research librarian or AI agent doing literature review. Scenario: Finding academic papers on a specific topic ranked by citation count.
-**Example AI prompt:** "Find papers on transformer attention mechanisms for time series forecasting from 2020 onwards, show top 10 by citations."
+| Tool | Price | Description |
+|------|-------|-------------|
+| search_papers | $0.02 | Search CrossRef, OpenAlex, Semantic Scholar, PubMed for papers on a topic |
+| get_paper_details | $0.01 | Get full metadata for a paper by DOI including abstract and funders |
+| find_citations | $0.02 | Find all papers that cite a specific paper (forward citations) |
+| find_grants | $0.03 | Search NIH, NSF, and foundation grants by topic |
+| author_research_profile | $0.03 | Get h-index, top papers, and affiliations for a researcher |
+| institution_research_profile | $0.05 | Get h-index, paper counts, and top topics for a university |
+| research_trends | $0.05 | Analyze publication volume and citation patterns over time |
+| systematic_review | $0.10 | Comprehensive literature review across all databases, deduplicated |
 
-### get_paper_details
-**Purpose:** Get detailed metadata for a paper by DOI including abstract, funders, and topics.
-**When to call:** Persona: Academic writer or researcher. Scenario: Getting full metadata and abstract for a specific paper identified during search.
-**Example AI prompt:** "Get full details for DOI 10.48550/arXiv.1706.03762 including abstract, authors, and funding information."
+## Example AI Prompt
 
-### find_citations
-**Purpose:** Find all papers that cite a specific paper (forward citations).
-**When to call:** Persona: Academic researcher or literature reviewer. Scenario: Tracing how a foundational paper has been built upon in subsequent research.
-**Example AI prompt:** "Find all papers that cite Bengio's 2018 Turing Award paper, show the most recent first."
+"Find recent papers on transformer attention mechanisms for time series forecasting from 2020 onwards, show top 10 by citations."
 
-### find_grants
-**Purpose:** Search funding opportunities from NIH, NSF, and foundation grants.
-**When to call:** Persona: Grant writer or research administrator. Scenario: Finding active funding opportunities for a research topic before submitting a proposal.
-**Example AI prompt:** "Find NIH and NSF grants for NLP research under $1M with deadlines in 2026."
+## Example AI Prompt
 
-### institution_research_profile
-**Purpose:** Get research profile for an institution including h-index, paper counts, and top research topics.
-**When to call:** Persona: VC analyst or academic partnership manager. Scenario: Assessing research strength of a university for partnership or investment.
-**Example AI prompt:** "What's the research profile of MIT's AI Lab — show h-index, top topics, and recent publication counts."
-
-### author_research_profile
-**Purpose:** Get research profile for an author including h-index, top papers, and affiliations.
-**When to call:** Persona: Talent scout or collaboration strategist. Scenario: Finding prolific researchers in a specific field for collaboration or recruitment.
-**Example AI prompt:** "Show me the top 10 researchers at Stanford working on machine learning with their h-index and top papers."
-
-### research_trends
-**Purpose:** Analyze research trends for a topic over time showing publication volume and citation patterns.
-**When to call:** Persona: Research strategist or investment analyst. Scenario: Understanding whether a research area is growing or declining to inform strategic decisions.
-**Example AI prompt:** "Show me the research trends for CRISPR technology over the last 10 years — publication volume and citation growth."
-
-### systematic_review
-**Purpose:** Comprehensive literature review across all databases, deduplicated and ranked by citations.
-**When to call:** Persona: Academic researcher or medical writer. Scenario: Generating a comprehensive literature review for a systematic review paper or meta-analysis.
-**Example AI prompt:** "Do a systematic review of mRNA vaccine research from 2020-2025, show top 50 papers ranked by citations across all databases."
+"Do a systematic review of mRNA vaccine research from 2020-2025, show top 50 papers ranked by citations across all databases."
 
 ---
 
-## Usage
+## MCP Server Details
 
-### Claude Desktop
+**Endpoint:** `https://academic-research-mcp.apify.actor/mcp`
+**Apify Store:** https://apify.com/xJbDa0jVpat4rNTan
+
+## Quick Start
+
 ```json
 {
   "mcpServers": {
@@ -64,61 +53,17 @@ Search 600M+ academic papers, grants, and citations for AI agents.
 }
 ```
 
-### cURL
-```bash
-curl -X POST "https://academic-research-mcp.apify.actor/mcp" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_APIFY_TOKEN" \
-  -d '{"tool": "search_papers", "params": {"query": "machine learning", "max_results": 5}}'
-```
-
----
+No API key required for public data. AI agents can call tools directly via the MCP protocol.
 
 ## Data Sources
 
-| Source | Records | Type |
-|--------|---------|------|
-| CrossRef | 150M | Papers |
-| OpenAlex | 250M | Papers |
-| NIH RePORTER | 900K | Grants |
-| NSF Award API | 200K | Grants |
-
----
-
-## Pricing Summary
-
-| Tool | Per 1,000 Calls |
-|------|-----------------|
-| search_papers | $20.00 |
-| get_paper_details | $10.00 |
-| find_citations | $20.00 |
-| find_grants | $30.00 |
-| institution_research_profile | $50.00 |
-| author_research_profile | $30.00 |
-| research_trends | $50.00 |
-| systematic_review | $100.00 |
-
-No subscription required. Pay per use via Apify PPE. No API key required — AI agents can call tools directly.
-
-## Apify Free Account Usage
-
-Apify provides free usage credits on all accounts:
-- **Free tier:** Includes credits for testing and small-scale usage
-- **PPE (Pay-Per-Event):** Only charged when tools are actually called
-- **No monthly minimums:** Pay only for what you use
-
-To get started:
-1. Create free Apify account at https://apify.com
-2. Get your API token from https://console.apify.com/account
-3. Pass token as query param: `?token=YOUR_APIFY_TOKEN` or `Authorization: Bearer` header
-
-Example with token:
-```bash
-curl -X POST "https://academic-research-mcp.apify.actor/mcp?token=YOUR_APIFY_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"tool": "search_papers", "params": {"query": "machine learning"}}'
-```
+| Source | Records |
+|--------|---------|
+| CrossRef | 150M papers |
+| OpenAlex | 250M papers |
+| NIH RePORTER | 900K grants |
+| NSF Award API | 200K grants |
 
 ## SEO Keywords
 
-OpenAlex alternative, CrossRef API, Semantic Scholar, NIH grants lookup, NSF award search, academic paper search, citation analysis, systematic review, no API key needed, AI agent, MCP server, academic research automation, ORCID author search, arXiv preprint search
+academic research MCP, literature review automation, paper search API, CrossRef alternative, Semantic Scholar API, NIH grants lookup, NSF award search, citation analysis, systematic review, no API key needed, AI agent research, LLM research tools, Claude academic search, Cursor research assistant, due diligence research
