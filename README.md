@@ -2,7 +2,7 @@
 
 > Search 600M+ academic papers, grants, and citations for AI agents.
 
-**[View on Apify](https://apify.com/wdavalos/academic-research-mcp)** | **[MCP Endpoint](https://academic-research-mcp.apify.actor/mcp)**
+**[View on Apify](https://apify.com/red-cars-io/academic-research-mcp)** | **[MCP Endpoint](https://academic-research-mcp.apify.actor/mcp)**
 
 ---
 
