@@ -14,14 +14,12 @@
     "EDUCATION"
   ],
   "pricing": {
-    "model": "EVENT"
+    "model": "PAY_PER_EVENT"
   },
   "defaultRunOptions": {
     "memoryMbytes": 1024,
     "timeoutSecs": 120
   },
-  "webServer": {
-    "enabled": true,
-    "mcpPath": "/mcp"
-  }
+  "usesStandbyMode": true,
+  "webServerMcpPath": "/mcp"
 }

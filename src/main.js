@@ -3,6 +3,7 @@
  * Search 600M+ academic papers, grants, and citations for AI agents.
  */
 
+import http from 'http';
 import Apify, { Actor } from 'apify';
 
 // MCP manifest
@@ -432,9 +433,106 @@ async function handleTool(toolName, params = {}) {
     return { error: `Unknown tool: ${toolName}` };
 }
 
-// Main entry point
-const { handleRequest } = Apify;
+// ============================================
+// HTTP SERVER FOR STANDBY MODE
+// ============================================
 
+await Actor.init();
+
+const isStandby = Actor.config.get('metaOrigin') === 'STANDBY';
+
+if (isStandby) {
+    const PORT = Actor.config.get('containerPort') || process.env.ACTOR_WEB_SERVER_PORT || 3000;
+
+    const server = http.createServer(async (req, res) => {
+        if (req.headers['x-apify-container-server-readiness-probe']) {
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.end('OK');
+            return;
+        }
+        if (req.method === 'POST' && req.url === '/mcp') {
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', async () => {
+                try {
+                    const jsonBody = JSON.parse(body);
+                    const id = jsonBody.id ?? null;
+
+                    const reply = (result) => {
+                        const resp = id !== null
+                            ? { jsonrpc: '2.0', id, result }
+                            : result;
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify(resp));
+                    };
+
+                    const replyError = (code, message) => {
+                        const resp = id !== null
+                            ? { jsonrpc: '2.0', id, error: { code, message } }
+                            : { status: 'error', error: message };
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify(resp));
+                    };
+
+                    const method = jsonBody.method;
+
+                    if (method === 'initialize') {
+                        return reply({
+                            protocolVersion: '2024-11-05',
+                            capabilities: { tools: {} },
+                            serverInfo: { name: 'academic-research-mcp', version: '1.0.0' }
+                        });
+                    }
+
+                    if (method === 'tools/list' || (!method && jsonBody.tool === 'list')) {
+                        return reply({ tools: MCP_MANIFEST.tools });
+                    }
+
+                    if (method === 'tools/call') {
+                        const toolName = jsonBody.params?.name;
+                        const toolArgs = jsonBody.params?.arguments || {};
+                        if (!toolName) return replyError(-32602, 'Missing params.name');
+                        const toolResult = await handleTool(toolName, toolArgs);
+                        return reply({ content: [{ type: 'text', text: JSON.stringify(toolResult, null, 2) }] });
+                    }
+
+                    const { tool, params = {} } = jsonBody;
+                    if (!tool) return replyError(-32602, 'Missing tool name');
+
+                    const result = await handleTool(tool, params);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'success', result }));
+                } catch (error) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', error: error.message }));
+                }
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Not Found');
+    });
+
+    server.listen(PORT, () => {
+        console.log(`Academic Research MCP listening on port ${PORT}`);
+    });
+
+    process.on('SIGTERM', () => {
+        server.close(() => process.exit(0));
+    });
+} else {
+    const input = await Actor.getInput();
+    if (input) {
+        const { tool, params = {} } = input;
+        if (tool) {
+            const result = await handleTool(tool, params);
+            await Actor.setValue('OUTPUT', result);
+        }
+    }
+    await Actor.exit();
+}
+
+// Export handleRequest for MCP gateway compatibility
 export default {
     handleRequest: async ({ request, response, log }) => {
         log.info("Academic Research MCP received request");
