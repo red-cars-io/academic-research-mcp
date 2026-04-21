@@ -207,6 +207,28 @@ Returns:
 
 ---
 
+## How It Compares to Semantic Scholar API
+
+| Aspect | Our MCP | Semantic Scholar API |
+|--------|---------|---------------------|
+| Price | $0.02-$0.10/call | Free tier (0/day), paid plans $0/month for non-profits |
+| API access | MCP (AI-native) | REST |
+| Setup time | 5 minutes | Hours (API key, documentation, rate limit handling) |
+| Data sources | CrossRef, OpenAlex, Semantic Scholar, NIH, NSF | Semantic Scholar only |
+| Free tier | Yes - pay per call | No - free tier is 0 calls/day |
+| Grants coverage | NIH + NSF | No |
+
+**Why choose our MCP:**
+- MCP protocol is designed for AI agent integration - natural language tool calls instead of REST
+- 600M+ papers across multiple sources, not just Semantic Scholar
+- Includes NIH and NSF grant search
+- No API key required for most sources
+- Parallel multi-source search in one tool call
+
+**Semantic Scholar API alternative:** https://api.semanticscholar.org/
+
+---
+
 ## Pricing
 
 | Tool | Price |
