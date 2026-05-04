@@ -47,6 +47,12 @@ Or with authentication:
 
 ---
 
+## Comparison
+
+See [COMPARISON.md](./COMPARISON.md) for detailed comparison vs Semantic Scholar, PubMed, and other academic research tools.
+
+---
+
 ## Tools
 
 | Tool | Price | Description |
@@ -296,5 +302,7 @@ All tools return JSON. See individual tool documentation for specific field sche
 ---
 
 ## SEO Keywords
+
+- [Comparison: vs Semantic Scholar, PubMed](COMPARISON.md)
 
 OpenAlex alternative, CrossRef API, Semantic Scholar, NIH grants lookup, NSF award search, academic paper search, citation analysis, systematic review, no API key needed, AI agent, MCP server, academic research automation, ORCID author search, arXiv preprint search, CrossRef, PubMed, DBLP, CORE
