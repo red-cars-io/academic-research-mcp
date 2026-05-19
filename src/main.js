@@ -422,7 +422,7 @@ async function handleTool(toolName, params = {}) {
         const price = TOOL_PRICES[toolName];
         if (price) {
             try {
-                await Actor.charge(price, { eventName: toolName });
+                await Actor.charge({ eventName: toolName, count: 1 });
             } catch (e) {
                 // Charging may fail if PPE not enabled or budget exhausted - non-fatal
                 console.error("Charge failed:", e.message);
@@ -437,9 +437,12 @@ async function handleTool(toolName, params = {}) {
 // HTTP SERVER FOR STANDBY MODE
 // ============================================
 
-await Actor.init();
-
+// Check STANDBY BEFORE Actor.init() — platform bug causes crash if init runs in STANDBY
 const isStandby = Actor.config.get('metaOrigin') === 'STANDBY';
+
+if (!isStandby) {
+    await Actor.init();
+}
 
 if (isStandby) {
     const PORT = Actor.config.get('containerPort') || process.env.ACTOR_WEB_SERVER_PORT || 3000;
